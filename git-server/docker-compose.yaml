@@ -1,0 +1,21 @@
+# read setup.text before running this compose
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        buildno: 1
+    image: 'winlu/docker-git-server'
+    restart: always
+    hostname: 'localhost'
+    ports:
+      - '1234:22'
+    volumes:
+      - git-data:/git/data:rw
+
+volumes:
+  git-data:
+    external: true

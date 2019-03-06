@@ -1,0 +1,18 @@
+version: '3'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        buildno: 1
+    image: 'jenkins/jenkins:lts'
+    restart: always
+    hostname: 'localhost'
+    ports:
+      - '8080:8080'
+    volumes:
+      - jenkinsvol:/var/jenkins_home:rw
+volumes:
+  jenkinsvol:
+    external: true

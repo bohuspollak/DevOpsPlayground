@@ -1,0 +1,1 @@
+FROM winlu/docker-git-server
