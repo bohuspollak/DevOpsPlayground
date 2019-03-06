@@ -32,8 +32,6 @@ E
 i
 9docs/errors_docker_jenkins/error_ssh_login_git-server.txt,a\9\a9a3aa14f8cce889147c7e9e833e3d1e7638d8d5
 D
-git-server/setup.txt,c\6\c65f6f9337e3a7ec43e99324db072e2cd3b2e17f
-D
 docs/howto_gitlab.md,d\d\ddd193d20c4c0c3b21f0a141e229ac551c58640f
 E
 docs/howto_jenkins.md,a\5\a56a93c1794cc233f293200334c5f085c6863e95
@@ -47,3 +45,6 @@ G
 gog/docker-compose.yaml,7\5\75d221a697f723f5e3de9505317fde1d3081c9e4
 9
 	Readme.md,0\c\0c1945d7443c2e154bd3e421c0d438bd4086d8c3
+:
+
+.gitignore,a\5\a5cc2925ca8258af241be7e5b0381edf30266302
