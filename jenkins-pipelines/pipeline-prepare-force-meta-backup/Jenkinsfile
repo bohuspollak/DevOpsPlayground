@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+    stages {
+        stage('Clone force-meta-backup') {
+          steps {
+            echo 'Checkout tooling'
+            echo 'TODO parametrize'
+            checkout([$class: 'GitSCM', branches: [[name: '*/master']],
+        	userRemoteConfigs: [[url: 'https://github.com/alan-morey/force-meta-backup.git']]])
+          }
+        }
+        stage('Validate the package') {
+          steps {
+            echo 'Check for files'
+            sh 'ls -ltra ./lib'
+          }
+        }
+        stage('Remove old API jar') {
+          steps {
+            echo 'Removing old api library file'
+            sh 'rm ./lib/ant-salesforce*jar'
+          }
+        }
+        stage('Get latest API library') {
+          steps {
+            echo 'Download latest SF API'
+            echo 'TODO parametrize'
+            sh "wget --show-progress --no-check-certificate https://gs0.salesforce.com/dwnld/SfdcAnt/salesforce_ant_45.0.zip"
+          }
+        }
+        stage('Get jar file from API package') {
+          steps {
+            echo 'Unzip...'
+            sh 'unzip -o salesforce_ant_45.0.zip ant-salesforce.jar'
+            echo 'TODO parametrize'
+          }
+        }
+        stage('Place jar to tool') {
+          steps {
+            echo 'TODO parametrize'
+            echo 'Copy ...'
+            sh 'cp ant-salesforce.jar ./lib'
+            echo 'File copied'
+            sh 'ls -ltr ./lib'
+          }
+        }
+    }
+}
