@@ -5,15 +5,9 @@ This is DevOps Development playground on container.
 - TODO list
 ### Content
 Container (status - reason):
-
-Jenkins (working)
-
-Git (not working - required mysql server)
-
-Git-server (working - standalone)
-
-Gitlab (not working - due to permissions)
-
-force-metadata-backup (not workingSalesforce)
+Jenkins (working) jenkins/docker-compose.yaml
+Gitlab CI (working) docker-gitlab/docker-compose.yml
+Gitlab CI Runner (working)  gitlab-runner/docker-compose.yaml
+Jenkins pipeline : force-metadata-backup (working)  jenkins-pipelines/pipeline-prepare-force-meta-backup
 
 
