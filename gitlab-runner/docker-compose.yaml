@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  web:
+    image: gitlab/gitlab-runner:latest
+    restart: always
+#    net: runner-net
+    volumes:
+      - dockersock:/var/run/docker.sock
+      - gitlabrunnervol:/etc/gitlab-runner
+
+volumes:
+  gitlabrunnervol:
+    external: true
