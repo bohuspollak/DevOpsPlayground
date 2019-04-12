@@ -1,12 +1,41 @@
 pipeline {
+        parameters {
+        booleanParam(defaultValue: true, description: 'Parameter: userFlag (true/false)', name: 'userFlag')
+        string(defaultValue: 'https://xxxxxx.cs84.my.salesforce.com', description: 'Salesforce serverurl', name: 'sf_serverurl')
+        string(defaultValue: 'bohus.pollak@xxxxx ', description: 'Salesforce username', name: 'sf_username')
+        password(defaultValue: '*******', description: 'Salesforce user password', name: 'sf_password')
+        string(defaultValue: 'Report,Document ', description: 'Metadata to exclude from export', name: 'sf_excludeTypes')
+        string(defaultValue: '2.5.6', description: 'The version will be downloaded https://dl.bintray.com/groovy/maven/apache-groovy-binary-x.x.x.zip', name: 'groovy_version', trim: false)
+        string(defaultValue: '45.0', description: 'The version will be downloaded https://gs0.salesforce.com/dwnld/SfdcAnt/salesforce_ant_x.x.zip', name: 'sfdc_metadata_api_version', trim: false)
+    //    string(defaultValue: 'https://github.com/alan-morey/force-meta-backup.git', description: 'repository force-meta-backup.git', name: 'repo-force-meta-backup', trim: false)
+        }
     agent any
     stages {
+        stage('Clean Work Space') {
+            steps {
+               cleanWs()
+               sh 'pwd'
+               sh 'ls'
+            }
+        }
+        stage('Parameters info') {
+          steps {
+            echo 'Parameters:'
+            echo "flag: ${params.userFlag}"
+            echo "sf.username: ${params.sf_username}"
+            echo "sf.password: ${params.sf_password}"
+            echo "sf.excludeTypes: ${params.sf_excludeTypes}"
+            echo "sf.serverurl: ${params.sf_serverurl}"
+            echo "groovy version: ${params.groovy_version}"
+            echo "sfdc metadata api: ${params.sfdc_metadata_api_version}"
+          //  echo "repo-force-meta-backup: ${params.repo-force-meta-backup}"
+          }
+        }
         stage('Clone force-meta-backup') {
           steps {
             echo 'Checkout tooling'
-            echo 'TODO parametrize'
             checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-        	userRemoteConfigs: [[url: 'https://github.com/alan-morey/force-meta-backup.git']]])
+        	userRemoteConfigs: [[url: 'https://github.com/alan-morey/force-meta-backup.git' ]]])
           }
         }
         stage('Validate the package') {
@@ -15,24 +44,23 @@ pipeline {
             sh 'ls -ltra ./lib'
           }
         }
-        stage('Remove old API jar') {
-          steps {
-            echo 'Removing old api library file'
-            sh 'rm ./lib/ant-salesforce*jar'
-          }
-        }
+//        stage('Remove old API jar') {
+//          steps {
+//            echo 'Removing old api library file'
+//            sh 'rm ./lib/ant-salesforce*jar'
+//          }
+//        }
         stage('Get latest API library') {
           steps {
             echo 'Download latest SF API'
             echo 'TODO parametrize'
-            sh "wget --show-progress --no-check-certificate https://gs0.salesforce.com/dwnld/SfdcAnt/salesforce_ant_45.0.zip"
+            sh "wget --show-progress --no-check-certificate https://gs0.salesforce.com/dwnld/SfdcAnt/salesforce_ant_${params.sfdc_metadata_api_version}.zip"
           }
         }
         stage('Get jar file from API package') {
           steps {
-            echo 'Unzip...'
-            sh 'unzip -o salesforce_ant_45.0.zip ant-salesforce.jar'
-            echo 'TODO parametrize'
+            echo "Unzip...${params.sfdc_metadata_api_version}.zip"
+            sh "unzip -o salesforce_ant_${params.sfdc_metadata_api_version}.zip ant-salesforce.jar"
           }
         }
         stage('Place jar to tool') {
@@ -43,6 +71,86 @@ pipeline {
             echo 'File copied'
             sh 'ls -ltr ./lib'
           }
+        }
+        stage('Cleanup package  ') {
+          steps {
+            echo 'TODO parametrize'
+            echo 'Removing files not required'
+            sh "rm salesforce_ant_${params.sfdc_metadata_api_version}.zip"
+            sh 'ls -ltr .'
+          }
+        }
+        stage('Run force-meta-backup clean') {
+          steps {
+            echo 'TODO parametrize'
+            echo 'Run force-meta-backup'
+                withAnt(installation: 'ant') {
+                     sh "ant clean"
+                }
+            }
+        }
+        stage('Groovy: Download for ANT task run') {
+          steps {
+            echo 'Download Groovy...'
+            echo 'TODO parametrize'
+                sh "wget --show-progress --no-check-certificate https://dl.bintray.com/groovy/maven/apache-groovy-binary-${params.groovy_version}.zip"
+          }
+        }
+        stage('Groovy - checksum/security') {
+          steps {
+            echo 'TODO checkusm'
+          }
+        }
+        stage('Groovy: Unzip package') {
+          steps {
+            echo 'Unzip...'
+            sh '''#!/bin/bash -xe
+            ps -ef
+            '''
+            sh "unzip -o apache-groovy-binary-${params.groovy_version}.zip"
+            echo "List packages..."
+            sh "ls -ltr ./*-${params.groovy_version}"
+          }
+        }
+        stage('Groovy: version check') {
+          steps {
+            sh 'java -version'
+            echo "PATH is: $PATH"
+            sh "./groovy-${params.groovy_version}/bin/groovy -version"
+            echo "------Groovy version from withEnv ----"
+                withEnv(["PATH+JAVA=./groovy-${params.groovy_version}/bin/"]) {
+                    sh "groovy -version"
+                    echo "PATH is: $PATH"
+                }
+            }
+        }
+         stage('Configure force-meta-backup build.properties') {
+          steps {
+            echo 'Prepare parameters to file'
+            echo 'Configure force-meta-backup config'
+            sh "echo sf.serverurl=${params.sf_serverurl} > build.properties"
+            sh "echo sf.username=${params.sf_username} >> build.properties"
+            sh "echo sf.password=${params.sf_password} >> build.properties"
+            sh "echo sf.excludeTypes=${params.sf_excludeTypes} >> build.properties"
+          }
+        }
+        stage('Check build.properties') {
+          steps {
+            echo 'Check build.properties'
+            sh 'cat build.properties'
+         }
+        }
+       stage('Run force-meta-backup retrieve') {
+            steps {
+                echo 'Run force-meta-backup'
+                withEnv(["PATH+JAVA=./groovy-${params.groovy_version}/bin/"]) {
+                    sh "groovy -version"
+                    echo "PATH is: $PATH"
+                    withAnt(installation: 'ant') {
+                        sh "ant backupMetadata"
+                      }
+                }
+            }
         }
     }
 }
